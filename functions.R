@@ -17,44 +17,24 @@ ipak <- function(pkg) {
 # usage: packages <- c('RMySQL', 'ggplot2', 'gridExtra', 'reshape2',
 # 'scales', 'grid') ipak(packages)
 
-# Function to generate n number of random deviates from the uniform distribution (between 0 and 1).
-# argument: n
-# return: numeric vector containing n random probabilities.
-randomProbability <- function(n) {
-  if (reproducible.results.mode == TRUE) {
-    set.seed(200)
-  } 
-  result <- runif(n)
-  return(result)
+# Estimation function to be used for each bootstrap iteration. Intended to be used in conjunction with "boot" function in package "boot".
+# Take a random sample of rows, the number of which are set in variable "subsample.number", with replacement from the data and calculate the mean.
+subsample.means <- function(dat, ind) 
+{
+  return(mean(sample(x = dat[ind], size = subsample.number, replace = TRUE)))
 }
 
-# Variable to store the user-defined degree of certainty in a format compatible with matrices.
-desired.percentile <<- 100 - degree.of.certainty
-
-# Monte Carlo (MC) simulation function. 
-# return: the percentile calculation for a given acreage.
-simulation.function <- function(X, n){
-  # Call randomProbability function to generate n random probability values and store the results in a numeric vector.
-  random.probability.value <- randomProbability(number.rows)
-  # Calculate inverse of the standard normal cumulative distribution given a probability, random.probability.value. Store results in a numeric vector.
-  inverse.value <- qnorm(random.probability.value) 
-  # Calculate normalized values for biomass density using the inverse.value vector. Store results in a numeric vector.
-  normalized.biomass.density <-  biomass.density + standard.error * inverse.value
-  # Convert biomass density (g/m2) to US tons for each reef area in acreage.sequence. Store results in a matrix, tons.matrix.
-  tons.matrix <- outer(normalized.biomass.density,acreage.sequence.prediction, FUN = tonsFromAcreageAndBiomassDensity)
-  # Calculate 4-row moving average column-wise over tons.matrix. Store results in a matrix, four.trial.moving.average.matrix.
-  four.trial.moving.average.matrix <- apply(tons.matrix[,1:length(acreage.sequence.prediction)], 2, SMA, n=4)
-  # Get pairwise maxima for corresponding values in tons.matrix and four.trial.moving.average.matrix. Store results in a matrix, pairwise.max.matrix.
-  pairwise.max.matrix <- pmax(tons.matrix, four.trial.moving.average.matrix)
-  # Generate a probability sequence for calculating percentiles.
-  probability.sequence <- seq(0.01, 0.99, 0.01)
-  # Calculate column-wise percentiles from pairwise.max.matrix. Store results in a matrix, percentile.matrix.
-  percentile.matrix <- apply(pairwise.max.matrix, 2, quantile, probs = probability.sequence, na.rm = TRUE)
-  if (output == "tonnage") {
-    # If the switch "output" is set to tonnage, return only the single calculated value from the percentile matrix corresponding to the acreage of interest.
-    return(percentile.matrix[desired.percentile, 1])
-  } else {
-    # If the switch "output" is NOT set to tonnage, return the entire set of tonnage calculations at each acreage in acreage.sequence.
-    return(percentile.matrix[desired.percentile, ])
-  }
+# Custom plot function for comparing actual vs bootstrapped data.
+plot.actual.vs.bootstrap <- function()
+{
+  hist(halmay.data.2009$No_m2, ylim=c(0,200), xlim=range(pretty(range(halmay.data.2009$No_m2, bootstrap.urchin.density))), xlab = expression("Density of urchins " ~ (individuals/m ^{2})), ylab = "Frequency", main = "Urchin Density Distribution", col = "black", cex.lab=1.3, las=1)
+  hist(bootstrap.urchin.density.mean, xlab = "", ylab = "", density = 20, col = "grey", axes=F, add=TRUE, lty=1)
+  abline(v=mean.urchin.density.2009,col="firebrick",lwd=1)
+  abline(v=mean.urchin.density.2009 - se.urchin.density.2009,col="firebrick",lty="dashed")
+  abline(v=mean.urchin.density.2009 + se.urchin.density.2009,col="firebrick",lty="dashed")
+  abline(v=mean.urchin.density.2009,col="firebrick",lwd=1)
+  abline(v=mean(bootstrap.urchin.density),col="blue",lwd=1)
+  abline(v=mean(bootstrap.urchin.density) + bootstrap.urchin.density.se,col="green",lty="dashed")
+  abline(v=mean(bootstrap.urchin.density) - bootstrap.urchin.density.se,col="green",lty="dashed")
+  legend("topright", c("actual", "resampled"), col = c("black", "grey"), lty = c(1,1), bty = "n")
 }
