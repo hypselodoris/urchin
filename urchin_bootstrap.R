@@ -33,7 +33,7 @@ ci.urchin.density.2009 <- c(mean.urchin.density.2009-2*se.urchin.density.2009, m
 
 # Calculate statistics based on resampled data:
 # Set the desired number of resample iterations:
-number.of.resamples <- 1000000
+number.of.resamples <- 10000
 # Set the desired number of random rows to subsample from the data to use for bootstrapping:
 subsample.number <- 15
 # Resample a subset of the data the set number of times, with replacement, and compute the mean: 
