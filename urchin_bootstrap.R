@@ -33,7 +33,7 @@ ci.urchin.density.2009 <- c(mean.urchin.density.2009-2*se.urchin.density.2009, m
 
 # Calculate statistics based on resampled data:
 # Set the desired number of resample iterations:
-number.of.resamples <- 1000
+number.of.resamples <- 1000000
 # Set the desired number of random rows to subsample from the data to use for bootstrapping:
 subsample.number <- 15
 # Resample a subset of the data the set number of times, with replacement, and compute the mean: 
@@ -42,21 +42,11 @@ bootstrap.urchin.density.means <- pbsapply(1:number.of.resamples,function(x) mea
 bootstrap.urchin.density.se <- sd(bootstrap.urchin.density.means)
 
 # Visualize actual vs bootstrap distribution:
-hist(halmay.data.2009$No_m2, ylim=c(0,200), xlim=range(pretty(range(halmay.data.2009$No_m2, bootstrap.urchin.density))), xlab = expression("Density of urchins " ~ (individuals/m ^{2})), ylab = "Frequency", main = "Urchin Density Distribution", col = "black", cex.lab=1.3, las=1)
-hist(bootstrap.urchin.density.mean, xlab = "", ylab = "", density = 20, col = "grey", axes=F, add=TRUE, lty=1)
-abline(v=mean.urchin.density.2009,col="firebrick",lwd=1)
-abline(v=mean(bootstrap.urchin.density),col="blue",lwd=1)
-abline(v=mean(bootstrap.urchin.density) + bootstrap.urchin.density.se,col="green",lwd=1)
-abline(v=mean(bootstrap.urchin.density) - bootstrap.urchin.density.se,col="green",lwd=1)
-legend("topright", c("actual", "resampled"), col = c("black", "grey"), lty = c(1,1), bty = "n")
+plot.actual.vs.bootstrap()
 
 # Use package "boot" to run non-parametric bootstrap analysis. Store results in object of class "boot":
 dat = halmay.data.2009$No_m2
-subsample.means <- function(dat, ind) 
-{
-  return(mean(sample(x = dat[ind], size = subsample.number, replace = TRUE)))
-}
-boot.urchin.density <- boot(data = dat, statistic = subsample.means, R=number.of.resamples)
+boot.urchin.density <- boot(data = dat, statistic = subsample.means, R=number.of.resamples) # NOTE: "subsample.means" is the estimation function to be used for bootstrap iteration. It is defined in the "functions.R" script.
 # Visualize boot object:
 plot(boot.urchin.density)
 # Calculate confidence intervals for statistic:
@@ -68,7 +58,6 @@ significance <- 0.05 # alpha. Conventionally = 0.05
 power.level <- 0.6 # probability of detecting an effect when there is an effect to be detected.
 type.test <- "one.sample" # type of t test.
 alt.hypothesis <- "two.sided"
-
 # Run power analysis, store results in object of class "power.htest":
 urchin.pwr <- pwr.t.test(n = NULL, d = effect.size, sig.level = significance, power = power.level, type = c("one.sample"), alternative = alt.hypothesis)
 # Create ggplot object illustrating relationship of sample size and test power for given set of parameters: 
