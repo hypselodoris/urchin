@@ -33,7 +33,7 @@ ci.urchin.density.2009 <- c(mean.urchin.density.2009-2*se.urchin.density.2009, m
 
 # Calculate statistics based on resampled data:
 # Set the desired number of resample iterations:
-number.of.resamples <- 10000
+number.of.resamples <- 1000
 # Set the desired number of random rows to subsample from the data to use for bootstrapping:
 subsample.number <- 15
 # Resample a subset of the data the set number of times, with replacement, and compute the mean: 
@@ -49,11 +49,18 @@ dat = halmay.data.2009$No_m2
 boot.urchin.density <- boot(data = dat, statistic = subsample.means, R=number.of.resamples, parallel = "multicore", ncpus = 2) # NOTE: "subsample.means" is the estimation function to be used for bootstrap iteration. It is defined in the "functions.R" script.
 # Visualize boot object:
 plot(boot.urchin.density)
-# Calculate confidence intervals for statistic:
+# Calculate 95% bootstrap confidence intervals of subsample mean:
 boot.ci(boot.urchin.density)
+# Render 95% confidence intervals calculated from entirety of actual data:
+ci.urchin.density.2009
 
 # Set up parameters for power analysis using package "pwr":
-effect.size <- 0.1 # Cohen's "d" effect size index. Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2nd ed.). Hillsdale,NJ: Lawrence Erlbaum.
+effect.multiplier <- 0.50 # This value *100 = the percent change you wish to detect 
+# Cohen's d: "the difference between two means divided by a standard deviation for the data." #
+# Cohen suggests that d values of 0.2, 0.5, and 0.8 represent small, medium, and large effect #
+# sizes respectively. Cohen, J. (1988). Statistical power analysis for the behavioral sciences#
+# (2nd ed.). Hillsdale,NJ: Lawrence Erlbaum.
+effect.size <- (effect.multiplier*mean.urchin.density.2009)/sd.urchin.density.2009
 significance <- 0.05 # alpha. Conventionally = 0.05
 power.level <- 0.6 # probability of detecting an effect when there is an effect to be detected.
 type.test <- "one.sample" # type of t test.
@@ -62,3 +69,4 @@ alt.hypothesis <- "two.sided"
 urchin.pwr <- pwr.t.test(n = NULL, d = effect.size, sig.level = significance, power = power.level, type = c("one.sample"), alternative = alt.hypothesis)
 # Create ggplot object illustrating relationship of sample size and test power for given set of parameters: 
 urchin.pwr.plot <- plot(urchin.pwr)
+urchin.pwr.plot
