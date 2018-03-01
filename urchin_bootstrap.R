@@ -46,7 +46,7 @@ plot.actual.vs.bootstrap()
 
 # Use package "boot" to run non-parametric bootstrap analysis. Store results in object of class "boot":
 dat = halmay.data.2009$No_m2
-boot.urchin.density <- boot(data = dat, statistic = subsample.means, R=number.of.resamples) # NOTE: "subsample.means" is the estimation function to be used for bootstrap iteration. It is defined in the "functions.R" script.
+boot.urchin.density <- boot(data = dat, statistic = subsample.means, R=number.of.resamples, parallel = "multicore", ncpus = 2) # NOTE: "subsample.means" is the estimation function to be used for bootstrap iteration. It is defined in the "functions.R" script.
 # Visualize boot object:
 plot(boot.urchin.density)
 # Calculate confidence intervals for statistic:
